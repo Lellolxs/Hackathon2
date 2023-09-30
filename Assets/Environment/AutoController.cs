@@ -1,13 +1,10 @@
 using Assets.Environment;
 using DataStructureTEST;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using UnityEditor;
 using UnityEngine;
-using UnityEngine.SocialPlatforms;
-using UnityEngine.UIElements;
+
 
 public class AutoController : MonoBehaviour
 {
@@ -18,6 +15,7 @@ public class AutoController : MonoBehaviour
     public Transform Obj3;
     public Transform Obj4;
 
+    private LineRenderer lr;
 
     private Timeline Timeline;
 
@@ -25,7 +23,14 @@ public class AutoController : MonoBehaviour
     void Start()
     {
         car = GetComponent<Transform>();
+        lr = gameObject.GetComponent<LineRenderer>();
         Timeline = new Timeline(ReadSourceFile().ToList());
+
+        Snapshot firstEver = Timeline.snapshots[0];
+        Obj1.transform.position = firstEver.Obstackles[0].Distance;
+        Obj2.transform.position = firstEver.Obstackles[1].Distance;
+        Obj3.transform.position = firstEver.Obstackles[2].Distance;
+        Obj4.transform.position = firstEver.Obstackles[3].Distance;
     }
 
     int i = 1;
@@ -34,6 +39,12 @@ public class AutoController : MonoBehaviour
     Vector2 VehicleDirection;
     double VehicleSpeed;
 
+    Vector3 Obj1VelocityVector;
+    Vector3 Obj2VelocityVector;
+    Vector3 Obj3VelocityVector;
+    Vector3 Obj4VelocityVector;
+
+    //Vector2 Obj1Position;
     // Update is called once per frame
     void Update()
     {
@@ -56,19 +67,43 @@ public class AutoController : MonoBehaviour
 
             VehicleDirection.Normalize();
 
-            Debug.Log($"Angle: {VehicleAngle} | YawRate: {VehicleYawRate}");
+            //Debug.Log($"Angle: {VehicleAngle} | YawRate: {VehicleYawRate}");
 
-            Obj1.transform.position = car.position + (Vector3)previous.Obstackles[0].Distance;
-            Obj2.transform.position = car.position + (Vector3)previous.Obstackles[1].Distance;
-            Obj3.transform.position = car.position + (Vector3)previous.Obstackles[2].Distance;
-            Obj4.transform.position = car.position + (Vector3)previous.Obstackles[3].Distance;
+            //Obj1Position = previous.Obstackles[0].Distance;
+
+            Obj1VelocityVector = (Vector3)previous.Obstackles[0].Distance;
+            Obj2VelocityVector = (Vector3)previous.Obstackles[1].Distance;
+            Obj3VelocityVector = (Vector3)previous.Obstackles[2].Distance;
+            Obj4VelocityVector = (Vector3)previous.Obstackles[3].Distance;
 
 
             ++i;
             if (i == Timeline.snapshots.Count) { i = 1; VehicleAngle = 0; car.position = new Vector3(); }
             timecounter = 0;
         }
+
         Vector3 finalVehicleDirection = (VehicleDirection * (float)VehicleSpeed) * (float)dT;
+        //Vector3 obj1_finalDirection = Obj1Direction * (float)dT;
+
+        Obj1.transform.position = car.position + Obj1VelocityVector;
+        Obj2.transform.position = car.position + Obj2VelocityVector;
+        Obj3.transform.position = car.position + Obj3VelocityVector;
+        Obj4.transform.position = car.position + Obj4VelocityVector;
+
+        lr.gameObject.SetActive(true);
+        lr.positionCount = 2 * 4;
+        lr.SetPosition(0, car.position);
+        lr.SetPosition(1, Obj1.position);
+
+        lr.SetPosition(2, car.position);
+        lr.SetPosition(3, Obj2.position);
+
+        lr.SetPosition(4, car.position);
+        lr.SetPosition(5, Obj3.position);
+
+        lr.SetPosition(6, car.position);
+        lr.SetPosition(7, Obj4.position);
+
 
         car.position += finalVehicleDirection;
     }
